@@ -1,0 +1,36 @@
+- name: Deploy app container from Docker Hub (docker CLI)
+  hosts: dockerhost
+  become: true
+
+  vars:
+    image: "rafavale/abcapp:1.0"
+    container_name: "abcapp"
+
+  tasks:
+    - name: Check Docker is installed
+      ansible.builtin.command: docker --version
+      register: docker_version
+      changed_when: false
+
+    - name: Pull image from Docker Hub
+      ansible.builtin.command: "docker pull {{ image }}"
+
+    - name: Remove old container if exists
+      ansible.builtin.shell: "docker rm -f {{ container_name }} || true"
+
+    - name: Run container
+      ansible.builtin.command: >
+        docker run -d --name {{ container_name }}
+        -p 8081:8080
+        --restart unless-stopped
+        {{ image }}
+
+    - name: Show container status
+      ansible.builtin.command: "docker ps --filter name={{ container_name }}"
+      register: ps
+      changed_when: false
+
+    - name: Print container status
+      ansible.builtin.debug:
+        var: ps.stdout_lines
+

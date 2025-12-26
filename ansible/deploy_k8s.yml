@@ -1,0 +1,26 @@
+- name: Deploy ABC app to Kubernetes
+  hosts: localhost
+  connection: local
+  gather_facts: false
+
+  tasks:
+    - name: Apply deployment
+      ansible.builtin.command: /usr/bin/kubectl apply -f /var/lib/jenkins/k8s/deployment.yml
+      environment:
+        KUBECONFIG: /var/lib/jenkins/.kube/config
+
+    - name: Apply service
+      ansible.builtin.command: /usr/bin/kubectl apply -f /var/lib/jenkins/k8s/service.yml
+      environment:
+        KUBECONFIG: /var/lib/jenkins/.kube/config
+
+    - name: Show status
+      ansible.builtin.command: /usr/bin/kubectl get deploy,pods,svc -o wide
+      environment:
+        KUBECONFIG: /var/lib/jenkins/.kube/config
+      register: out
+      changed_when: false
+
+    - ansible.builtin.debug:
+        var: out.stdout_lines
+
